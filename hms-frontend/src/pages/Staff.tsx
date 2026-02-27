@@ -1,23 +1,23 @@
 import { useEffect, useState } from 'react';
-import { userService, type Staff } from '../api/userService';
+import { staffService, type StaffDto } from '../api/staffService';
 import { Search, UserCog, Phone, ShieldCheck, Loader2, IndianRupee, Trash2, Pencil } from 'lucide-react';
 import StaffModal from '../components/StaffModal';
 
 export default function StaffPage() {
-  const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [staffList, setStaffList] = useState<StaffDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState<StaffDto | null>(null);
 
   useEffect(() => { loadStaff(); }, []);
 
   const loadStaff = async () => {
     try {
       setLoading(true);
-      const data = await userService.getStaff();
+      const data = await staffService.getAllStaff();
       setStaffList(data);
     } catch (error) {
       console.error("Error loading staff", error);
@@ -29,7 +29,7 @@ export default function StaffPage() {
   const handleRemove = async (id: number) => {
     if (!window.confirm("Are you sure you want to remove this staff member?")) return;
     try {
-      await userService.deleteStaff(id);
+      await staffService.deleteStaff(id);
       loadStaff();
     } catch {
       alert("Failed to remove staff member.");
@@ -75,8 +75,7 @@ export default function StaffPage() {
             <tr className="bg-surface/30 border-b border-surface">
               <th className="p-4 text-[10px] font-bold text-muted uppercase tracking-widest">Staff Member</th>
               <th className="p-4 text-[10px] font-bold text-muted uppercase tracking-widest">Role</th>
-              <th className="p-4 text-[10px] font-bold text-muted uppercase tracking-widest">Contact</th>
-              <th className="p-4 text-[10px] font-bold text-muted uppercase tracking-widest">Salary</th>
+              <th className="p-4 text-[10px] font-bold text-muted uppercase tracking-widest text-right">Salary</th>
               <th className="p-4 text-[10px] font-bold text-muted uppercase tracking-widest text-right">Actions</th>
             </tr>
           </thead>
@@ -98,6 +97,7 @@ export default function StaffPage() {
                       <p className="text-xs text-muted flex items-center gap-1">
                         <Phone size={12}/> {member.contact}
                       </p>
+                      <p className="text-xs text-muted">@{member.username}</p>
                     </div>
                   </div>
                 </td>
@@ -114,16 +114,16 @@ export default function StaffPage() {
                   </span>
                 </td>
                 <td className="p-4 text-right">
-                  <div className="flex justify-end gap-4">
+                  <div className="flex justify-end gap-2">
                     <button 
                       onClick={() => { setSelectedStaff(member); setIsModalOpen(true); }}
-                      className="text-xs font-bold uppercase tracking-tighter text-muted hover:text-primary flex items-center gap-1"
+                      className="text-xs font-bold uppercase tracking-tighter text-muted hover:text-primary flex items-center gap-1 px-2 py-1 rounded hover:bg-surface/50 transition-colors"
                     >
                       <Pencil size={12}/> Edit
                     </button>
                     <button 
                       onClick={() => handleRemove(member.staffId!)}
-                      className="text-xs font-bold uppercase tracking-tighter text-destructive hover:opacity-70 flex items-center gap-1"
+                      className="text-xs font-bold uppercase tracking-tighter text-destructive hover:opacity-70 flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50 transition-colors"
                     >
                       <Trash2 size={12}/> Remove
                     </button>

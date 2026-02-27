@@ -1,21 +1,45 @@
 import { useState, useEffect } from "react";
 import { X, Save, Loader2, UserCog } from "lucide-react";
-import { userService, type Staff } from "../api/userService";
+import { staffService, type Staff, type StaffDto } from "../api/staffService";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  editData: Staff | null;
+  editData: StaffDto | null;
 }
 
 export default function StaffModal({ isOpen, onClose, onSuccess, editData }: Props) {
-  const [formData, setFormData] = useState<Staff>({ name: '', role: '', contact: '', salary: 0 });
+  const [formData, setFormData] = useState<Omit<Staff, 'staffId'>>({ 
+    name: '', 
+    role: 'RECEPTIONIST', 
+    contact: '', 
+    salary: 0, 
+    username: '',
+    password: ''
+  });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (editData) setFormData(editData);
-    else setFormData({ name: '', role: '', contact: '', salary: 0 });
+    if (editData) {
+      setFormData({
+        name: editData.name,
+        role: editData.role,
+        contact: editData.contact,
+        salary: editData.salary,
+        username: editData.username,
+        password: ''
+      });
+    } else {
+      setFormData({ 
+        name: '', 
+        role: 'RECEPTIONIST', 
+        contact: '', 
+        salary: 0, 
+        username: '',
+        password: ''
+      });
+    }
   }, [editData, isOpen]);
 
   if (!isOpen) return null;
@@ -25,9 +49,15 @@ export default function StaffModal({ isOpen, onClose, onSuccess, editData }: Pro
     setLoading(true);
     try {
       if (editData?.staffId) {
-        await userService.updateStaff(editData.staffId, formData);
+        // For updates, only include password if it's provided
+        const updateData = { ...formData };
+        if (!updateData.password) {
+          delete updateData.password;
+        }
+        await staffService.updateStaff(editData.staffId, updateData);
       } else {
-        await userService.createStaff(formData);
+        // For creation, password is required
+        await staffService.createStaff(formData);
       }
       onSuccess();
       onClose();
@@ -54,9 +84,32 @@ export default function StaffModal({ isOpen, onClose, onSuccess, editData }: Pro
                    value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
           </div>
           <div>
-            <label className="text-xs font-bold text-muted uppercase mb-2">Role (e.g. MANAGER, HOUSEKEEPING)</label>
+            <label className="text-xs font-bold text-muted uppercase mb-2">Username</label>
             <input required className="w-full p-2 bg-surface rounded-lg outline-none border border-surface focus:border-primary" 
-                   value={formData.role} onChange={e => setFormData({...formData, role: e.target.value.toUpperCase()})} />
+                   value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
+          </div>
+          {!editData && (
+            <div>
+              <label className="text-xs font-bold text-muted uppercase mb-2">Password</label>
+              <input required type="password" className="w-full p-2 bg-surface rounded-lg outline-none border border-surface focus:border-primary" 
+                     value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+            </div>
+          )}
+          {editData && (
+            <div>
+              <label className="text-xs font-bold text-muted uppercase mb-2">New Password (leave empty to keep current)</label>
+              <input type="password" className="w-full p-2 bg-surface rounded-lg outline-none border border-surface focus:border-primary" 
+                     value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+            </div>
+          )}
+          <div>
+            <label className="text-xs font-bold text-muted uppercase mb-2">Role</label>
+            <select required className="w-full p-2 bg-surface rounded-lg outline-none border border-surface focus:border-primary" 
+                    value={formData.role} onChange={e => setFormData({...formData, role: e.target.value as 'ADMIN' | 'MANAGER' | 'RECEPTIONIST'})}>
+              <option value="RECEPTIONIST">RECEPTIONIST</option>
+              <option value="MANAGER">MANAGER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
           </div>
           <div>
             <label className="text-xs font-bold text-muted uppercase mb-2">Contact Number</label>
@@ -65,7 +118,7 @@ export default function StaffModal({ isOpen, onClose, onSuccess, editData }: Pro
           </div>
           <div>
             <label className="text-xs font-bold text-muted uppercase mb-2">Monthly Salary (₹)</label>
-            <input required type="number" className="w-full p-2 bg-surface rounded-lg outline-none border border-surface focus:border-primary" 
+            <input required type="number" step="0.01" className="w-full p-2 bg-surface rounded-lg outline-none border border-surface focus:border-primary" 
                    value={formData.salary} onChange={e => setFormData({...formData, salary: Number(e.target.value)})} />
           </div>
           <button disabled={loading} className="w-full bg-accent text-white py-3 rounded-button font-bold flex items-center justify-center gap-2 mt-4 transition-opacity disabled:opacity-50">
