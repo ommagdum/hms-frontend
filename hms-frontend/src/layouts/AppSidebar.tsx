@@ -9,7 +9,10 @@ import {
   UserCog, 
   Users, 
   X,
-  LogOut
+  LogOut,
+  FileText,
+  TrendingUp,
+  User
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -33,8 +36,9 @@ export default function AppSidebar({ isCollapsed, setIsCollapsed }: SidebarProps
         { label: 'Rooms', icon: BedDouble, route: '/rooms', roles: ['ADMIN', 'RECEPTIONIST']},
         { label: 'Calendar', icon: Calendar, route: '/calendar', roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST']},
         { label: 'Bookings', icon: CalendarCheck, route: '/bookings', roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST']},
-        { label: 'Customers', icon: Users, route: '/customers', roles: ['ADMIN', 'RECEPTIONIST']},
+        { label: 'Customers', icon: Users, route: '/customers', roles: ['ADMIN', 'RECEPTIONIST', 'MANAGER']},
         { label: 'Staff', icon: UserCog, route: '/staff', roles: ['ADMIN']},
+        { label: 'Reports', icon: FileText, route: '/reports', roles: ['ADMIN', 'MANAGER']},
     ];
 
     // Filter items based on current user role

@@ -12,7 +12,11 @@ import RoomCalendar from "./pages/RoomCalendar"
 import BookingDetails from "./pages/BookingDetials"
 import EditBooking from "./pages/EditBooking"
 import Login from "./pages/Login"
-import { LayoutDashboard, BedDouble, Calendar, CalendarCheck, Users, UserCog } from "lucide-react"
+import ReportsIndex from "./pages/Reports/index"
+import DailyRevenueReport from "./pages/Reports/DailyRevenue"
+import MonthlyOccupancyReport from "./pages/Reports/MonthlyOccupancy"
+import CustomerHistoryReport from "./pages/Reports/CustomerHistory"
+import { LayoutDashboard, BedDouble, Calendar, CalendarCheck, Users, UserCog, FileText } from "lucide-react"
 import { getFirstAccessibleRoute } from "./utils/auth"
 import { useAuth } from "./contexts/AuthContext"
 import type { UserRole } from "./utils/auth"
@@ -26,8 +30,9 @@ function RoleBasedRedirect() {
     { label: 'Rooms', icon: BedDouble, route: '/rooms', roles: ['ADMIN', 'RECEPTIONIST'] as UserRole[]},
     { label: 'Calendar', icon: Calendar, route: '/calendar', roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] as UserRole[]},
     { label: 'Bookings', icon: CalendarCheck, route: '/bookings', roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] as UserRole[]},
-    { label: 'Customers', icon: Users, route: '/customers', roles: ['ADMIN', 'RECEPTIONIST'] as UserRole[]},
+    { label: 'Customers', icon: Users, route: '/customers', roles: ['ADMIN', 'RECEPTIONIST', 'MANAGER'] as UserRole[]},
     { label: 'Staff', icon: UserCog, route: '/staff', roles: ['ADMIN'] as UserRole[]},
+    { label: 'Reports', icon: FileText, route: '/reports', roles: ['ADMIN', 'MANAGER'] as UserRole[]},
   ];
 
   const firstRoute = user ? getFirstAccessibleRoute(user.role, navItems) : '/dashboard';
@@ -88,7 +93,7 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="customers" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'RECEPTIONIST']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'RECEPTIONIST', 'MANAGER']}>
                 <Customers />
               </ProtectedRoute>
             }/>
@@ -102,6 +107,28 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Reports Routes - Only ADMIN and MANAGER can access */}
+            <Route path="reports" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                <ReportsIndex />
+              </ProtectedRoute>
+            }/>
+            <Route path="reports/daily-revenue" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                <DailyRevenueReport />
+              </ProtectedRoute>
+            }/>
+            <Route path="reports/monthly-occupancy" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                <MonthlyOccupancyReport />
+              </ProtectedRoute>
+            }/>
+            <Route path="reports/customer-history" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
+                <CustomerHistoryReport />
+              </ProtectedRoute>
+            }/>
           </Route>
 
           {/* Fallback for 404s or unauthorized access */}
