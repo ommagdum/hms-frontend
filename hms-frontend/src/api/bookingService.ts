@@ -4,7 +4,7 @@ import type { ApiResponse, Page } from "./roomService"; // Reuse the Page interf
 export interface Booking {
     bookingId?: number;
     customerId?: number;
-    guestName?: string; 
+    customerName?: string; 
     roomType?: string;
     roomId: number;
     roomNumber?: string; 

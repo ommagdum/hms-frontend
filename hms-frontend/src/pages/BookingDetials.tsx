@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, User, Home, CreditCard, Printer, Ban } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Home, CreditCard, FileText } from 'lucide-react';
 import { bookingService, type Booking } from '../api/bookingService';
 import { format, parseISO } from 'date-fns';
+import InvoiceModal from '../components/InvoiceModal';
 
 export default function BookingDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -69,17 +71,52 @@ export default function BookingDetails() {
                 </p>
               </div>
             </div>
-            <button onClick={() => window.print()} className="p-3 bg-white border border-surface rounded-xl hover:bg-surface transition-all">
-              <Printer size={20} />
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setShowInvoiceModal(true)}
+                disabled={isCancelled}
+                className="bg-primary text-white px-4 py-3 rounded-xl hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                title="View Invoice"
+              >
+                <FileText size={18} />
+                Invoice
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Invoice Modal */}
+      <InvoiceModal
+        isOpen={showInvoiceModal}
+        onClose={() => setShowInvoiceModal(false)}
+        bookingId={booking.bookingId || 0}
+        bookingDetails={{
+          customerName: booking.customerName || `Guest #${booking.customerId}`,
+          customerId: booking.customerId,
+          customerEmail: '', // Will be fetched in modal
+          customerPhone: '', // Will be fetched in modal
+          roomNumber: booking.roomNumber || '',
+          checkIn: booking.checkIn,
+          checkOut: booking.checkOut,
+          totalAmount: booking.totalAmount || 0
+        }}
+      />
     </div>
   );
 }
 
-function DetailBlock({ icon: Icon, label, value, subValue }: any) {
+function DetailBlock({ 
+  icon: Icon, 
+  label, 
+  value, 
+  subValue 
+}: { 
+  icon: React.ComponentType<{ size?: number }>; 
+  label: string; 
+  value: string; 
+  subValue?: string; 
+}) {
   return (
     <div className="flex gap-4">
       <div className="p-3 bg-surface rounded-xl h-fit text-primary"><Icon size={20} /></div>

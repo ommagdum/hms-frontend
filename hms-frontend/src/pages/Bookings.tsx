@@ -4,15 +4,21 @@ import {
   Search, Plus, Ban, Eye, Calendar, Home, Loader2, X,
   XCircle,
   Pencil,
-  CheckCircle2
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { bookingService, type Booking } from '../api/bookingService';
 import { format, isToday, parseISO, isAfter, startOfDay } from 'date-fns';
+import type { Page } from '../api/roomService';
 
 export default function Bookings() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState<Page<Booking> | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize] = useState(10);
   const [filters, setFilters] = useState({
     guestName: '',
     roomNumber: '',
@@ -28,25 +34,26 @@ export default function Bookings() {
     }
   }, [toast]);
 
-  const fetchEnrichedBookings = useCallback(async () => {
+  const fetchEnrichedBookings = useCallback(async (page: number = currentPage) => {
     setLoading(true);
     try {
       const res = await bookingService.getAllBookings({
-        page: 0,
-        size: 50,
+        page,
+        size: pageSize,
         guestName: filters.guestName,
         roomNumber: filters.roomNumber,
         status: filters.status
       });
       if (res.success) {
         setBookings(res.data.content || []);
+        setPagination(res.data);
       }
     } catch (err) {
       console.error("Failed to load bookings", err);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, currentPage, pageSize]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -70,14 +77,35 @@ export default function Bookings() {
             ));
             alert("Booking cancelled successfully.");
         }
-    } catch (err: any) {
-        alert(`Error: ${err.response?.data?.message || "Failed to cancel booking."}`);
+    } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to cancel booking.";
+        alert(`Error: ${errorMessage}`);
     } finally {
         setLoading(false);
     }
   };
 
-  const clearFilters = () => setFilters({ guestName: '', roomNumber: '', status: '' });
+  const clearFilters = () => {
+    setFilters({ guestName: '', roomNumber: '', status: '' });
+    setCurrentPage(0);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    fetchEnrichedBookings(newPage);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 0) {
+      handlePageChange(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pagination && currentPage < pagination.totalPages - 1) {
+      handlePageChange(currentPage + 1);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -247,6 +275,67 @@ export default function Bookings() {
           </table>
         </div>
       </div>
+
+      {/* Pagination Controls */}
+      {pagination && pagination.totalPages > 1 && (
+        <div className="bg-white rounded-card border border-surface shadow-card p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted">
+              Showing {pagination.content.length} of {pagination.totalElements} bookings
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePreviousPage}
+                disabled={currentPage === 0}
+                className="p-2 rounded-lg border border-surface hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                title="Previous Page"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: pagination.totalPages }, (_, i) => {
+                  const page = i;
+                  const isCurrentPage = page === currentPage;
+                  const isNearCurrent = Math.abs(page - currentPage) <= 2 || page === 0 || page === pagination.totalPages - 1;
+                  
+                  if (!isNearCurrent && page > 0 && page < pagination.totalPages - 1) {
+                    if (page === currentPage - 3 || page === currentPage + 3) {
+                      return (
+                        <span key={page} className="px-2 text-muted">...</span>
+                      );
+                    }
+                    return null;
+                  }
+                  
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-all ${
+                        isCurrentPage
+                          ? 'bg-primary text-white'
+                          : 'border border-surface hover:bg-surface text-muted hover:text-foreground'
+                      }`}
+                    >
+                      {page + 1}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === pagination.totalPages - 1}
+                className="p-2 rounded-lg border border-surface hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                title="Next Page"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
