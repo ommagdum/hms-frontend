@@ -32,12 +32,13 @@ export const bookingService = {
         guestName?: string; 
         roomNumber?: string; 
         status?: string 
-    }) => {
+    }): Promise<ApiResponse<Page<Booking>>> => {
 
-        const cleanParams: any = { ...params };
-        Object.keys(cleanParams).forEach(key => {
-            if (cleanParams[key] === '' || cleanParams[key] === undefined) {
-                delete cleanParams[key];
+        const cleanParams: Record<string, string> = {};
+        Object.keys(params).forEach(key => {
+            const value = params[key as keyof typeof params];
+            if (value !== '' && value !== undefined) {
+                cleanParams[key] = String(value);
             }
         });
 
@@ -46,29 +47,29 @@ export const bookingService = {
         return res.data;
     },
 
-    createBooking: async (booking: any): Promise<ApiResponse<Booking>> => {
+    createBooking: async (booking: Omit<Booking, 'bookingId'>): Promise<ApiResponse<Booking>> => {
         const res = await apiClient.post<ApiResponse<Booking>>('/bookings', booking);
         return res.data;
     },
 
-    getBookingsInRange: async (startDate: string, endDate: string) => {
+    getBookingsInRange: async (startDate: string, endDate: string): Promise<ApiResponse<BookingRangeResponse[]>> => {
         const res = await apiClient.get<ApiResponse<BookingRangeResponse[]>>(
             `/bookings/range?startDate=${startDate}&endDate=${endDate}`
         );
         return res.data;
     },
 
-    cancelBooking: async (id: number) => {
+    cancelBooking: async (id: number): Promise<ApiResponse<Booking>> => {
         const res = await apiClient.put<ApiResponse<Booking>>(`/bookings/${id}/cancel`);
         return res.data;
     },
 
-    getBookingById: async (id: number) => {
+    getBookingById: async (id: number): Promise<ApiResponse<Booking>> => {
         const res = await apiClient.get<ApiResponse<Booking>>(`/bookings/${id}`);
         return res.data;
     },
 
-    updateBooking: async (id: number, booking: any) => {
+    updateBooking: async (id: number, booking: Partial<Booking>): Promise<ApiResponse<Booking>> => {
     const res = await apiClient.put<ApiResponse<Booking>>(`/bookings/${id}`, booking);
     return res.data;
     }
