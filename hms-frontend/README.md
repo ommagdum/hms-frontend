@@ -1,4 +1,4 @@
-# 🏨 HMS Frontend - Hotel Management System
+# 🏨 HMS - Hotel Management System (Frontend)
 
 A modern, elegant, and feature-rich frontend application for hotel management, built with React, TypeScript, and Tailwind CSS. This system provides comprehensive tools for managing hotel operations including bookings, rooms, customers, staff, and detailed reporting.
 
